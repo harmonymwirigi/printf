@@ -1,48 +1,83 @@
-#include "main.h"
+#include "holberton.h"
+#include <stdarg.h>
 
 /**
- * _printf - produces output according to a format
- * @format: format string containing the characters and the specifiers
- * Description: this function will call the get_print() function that will
- * determine which printing function to call depending on the conversion
- * specifiers contained into fmt
- * Return: length of the formatted output string
- */
+ *  * check_format - checks if there is a valid format specifier
+ *   * @format: possible valid format specifier
+ *    * Return: pointer to valid function or NULL
+ *     */
+int (*check_format(const char *format))(va_list)
+{
+	int i = 0;
+	print_t p[] = {
+	{"c", print_c},
+	{"s", print_s},
+	{"i", print_i},
+	{"d", print_d},
+	{"u", print_u},
+	{"o", print_o},
+	{"x", print_x},
+	{"X", print_X},
+	{"p", print_p},
+	{"S", print_S},
+	{"r", print_r},
+	{"R", print_R},
+	{NULL, NULL}
+	};
+	for (; p[i].t != NULL; i++)
+	{
+		if (*(p[i].t) == *format)
+			break;
+	}
+	return (p[i].f);
+}
+
+/**
+ *  * _printf - function for format printing
+ *   * @format: list of arguments to printing
+ *    * Return: Number of characters to printing
+ *     */
 int _printf(const char *format, ...)
 {
-	int (*pfunc)(va_list, flags_t *);
-	const char *p;
-	va_list arguments;
-	flags_t flags = {0, 0, 0};
+	va_list ap;
+	int (*f)(va_list);
+	unsigned int i = 0, counter = 0;
 
-	register int count = 0;
+	if (format == NULL)
+		return (-1);
 
-	va_start(arguments, format);
-	if (!format || (format[0] == '%' && !format[1]))
-	return (-1);
-	if (format[0] == '%' && format[1] == ' ' && !format[2])
-	return (-1);
-	for (p = format; *p; p++)
+	va_start(ap, format);
+	while (format && format[i])
 	{
-	if (*p == '%')
-	{
-	p++;
-	if (*p == '%')
-	{
-	count += _putchar('%');
-	continue;
+		if (format[i] != '%')
+		{
+			_putchar(format[i]);
+			counter+;
+			i++;
+			continue;
+																							}
+		else
+		{
+			if (format[i + 1] == '%')
+			{
+				_putchar('%');
+				counter++;
+				i += 2;
+				continue;
+			}
+			else
+			{
+				f = check_format(&format[i + 1]);
+				if (f == NULL)
+					return (-1);
+				i += 2;
+				counter += f(ap);
+				continue;
+			
+			}
+		}
+		i++;
 	}
-	while (get_flag(*p, &flags))
-	p++;
-	pfunc = get_print(*p);
-	count += (pfunc)
-	? pfunc(arguments, &flags)
-	: _printf("%%%c", *p);
-	}
-	else
-	count += _putchar(*p);
-	}
-	_putchar(-1);
-	va_end(arguments);
-	return (count);
+	va_end(ap);
+	return (counter);
 }
